@@ -3,8 +3,17 @@ require('dotenv').config();
 const express = require('express');
 const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
 const bodyParser = require('body-parser');
-const { products, orders } = require('./data');
 const cors = require('cors');
+const {
+    createProduct,
+    fetchProducts,
+    updateProduct,
+    deleteProduct,
+    createOrder,
+    fetchOrders,
+    updateOrder,
+    deleteOrder,
+} = require('./data');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,40 +28,61 @@ app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
-app.get('/api/products', (req, res) => {
+// Products
+app.get('/api/products', async (req, res) => {
+    const products = await fetchProducts();
     res.json(products);
 });
 
-app.get('/api/products/:id', (req, res) => {
-    const product = products.find(p => p.id === Number(req.params.id));
-    if (!product) {
-        return res.status(404).send('Product not found');
-    }
-    res.json(product);
+app.post('/api/products', async (req, res) => {
+    const newProduct = await createProduct(req.body);
+    res.status(201).json(newProduct);
 });
 
-// Apply Clerk's strict authentication middleware
+app.put('/api/products/:id', async (req, res) => {
+    const updatedProduct = await updateProduct(req.params.id, req.body);
+    res.json(updatedProduct);
+});
+
+app.delete('/api/products/:id', async (req, res) => {
+    const deletedProduct = await deleteProduct(req.params.id);
+    res.json(deletedProduct);
+});
+
+// Orders
 app.get('/api/orders',
     ClerkExpressRequireAuth(),
-    (req, res) => {
-        // Your existing handler code
-        const userOrders = orders.filter(order => order.userId === 'user');
+    async (req, res) => {
+        const userOrders = await fetchOrders();
         res.json(userOrders);
     }
 );
 
 app.post('/api/orders',
     ClerkExpressRequireAuth(),
-    (req, res) => {
-        // Your existing handler code
-        const newOrder = {
-            id: orders.length + 1,
+    async (req, res) => {
+        const newOrder = await createOrder({
             userId: req.auth.id,
             products: req.body.products,
             total: req.body.total,
-        };
-        orders.push(newOrder);
+        });
         res.status(201).json(newOrder);
+    }
+);
+
+app.put('/api/orders/:id',
+    ClerkExpressRequireAuth(),
+    async (req, res) => {
+        const updatedOrder = await updateOrder(req.params.id, req.body);
+        res.json(updatedOrder);
+    }
+);
+
+app.delete('/api/orders/:id',
+    ClerkExpressRequireAuth(),
+    async (req, res) => {
+        const deletedOrder = await deleteOrder(req.params.id);
+        res.json(deletedOrder);
     }
 );
 

@@ -1,26 +1,70 @@
-// data.js
-exports.products = [
-    { id: 1, name: 'Product 1', description: 'Description 1', price: 100, image: 'https://source.unsplash.com/random/200x200?sig=1' },
-    { id: 2, name: 'Product 2', description: 'Description 2', price: 200, image: 'https://source.unsplash.com/random/200x200?sig=2' },
-    { id: 3, name: 'Product 3', description: 'Description 3', price: 300, image: 'https://source.unsplash.com/random/200x200?sig=3' },
-    { id: 4, name: 'Product 4', description: 'Description 4', price: 400, image: 'https://source.unsplash.com/random/200x200?sig=4' },
-    { id: 5, name: 'Product 5', description: 'Description 5', price: 500, image: 'https://source.unsplash.com/random/200x200?sig=5' },
-    { id: 6, name: 'Product 6', description: 'Description 6', price: 600, image: 'https://source.unsplash.com/random/200x200?sig=6' },
-    { id: 7, name: 'Product 7', description: 'Description 7', price: 700, image: 'https://source.unsplash.com/random/200x200?sig=7' },
-    { id: 8, name: 'Product 8', description: 'Description 8', price: 800, image: 'https://source.unsplash.com/random/200x200?sig=8' },
-    { id: 9, name: 'Product 9', description: 'Description 9', price: 900, image: 'https://source.unsplash.com/random/200x200?sig=9' },
-    { id: 10, name: 'Product 10', description: 'Description 10', price: 1000, image: 'https://source.unsplash.com/random/200x200?sig=10' },
-];
+const pool = require('./db');
 
-exports.orders = [
-    { id: 1, userId: 'user', products: [1, 2], total: 300 },
-    { id: 2, userId: 'user', products: [3, 4], total: 700 },
-    { id: 3, userId: 'user', products: [5, 6], total: 1100 },
-    { id: 4, userId: 'user', products: [7, 8], total: 1500 },
-    { id: 5, userId: 'user', products: [9, 10], total: 1900 },
-    { id: 6, userId: 'user2', products: [1, 3, 5], total: 600 },
-    { id: 7, userId: 'user2', products: [2, 4, 6], total: 1200 },
-    { id: 8, userId: 'user2', products: [7, 9], total: 1600 },
-    { id: 9, userId: 'user3', products: [2, 8], total: 1000 },
-    { id: 10, userId: 'user3', products: [4, 6], total: 1000 },
-];
+// Functions for Products
+async function createProduct(product) {
+    const { name, description, price, image } = product;
+    const res = await pool.query(
+        'INSERT INTO products (name, description, price, image) VALUES ($1, $2, $3, $4) RETURNING *',
+        [name, description, price, image]
+    );
+    return res.rows[0];
+}
+
+async function fetchProducts() {
+    const res = await pool.query('SELECT * FROM products');
+    return res.rows;
+}
+
+async function updateProduct(id, updatedProduct) {
+    const { name, description, price, image } = updatedProduct;
+    const res = await pool.query(
+        'UPDATE products SET name = $1, description = $2, price = $3, image = $4 WHERE id = $5 RETURNING *',
+        [name, description, price, image, id]
+    );
+    return res.rows[0];
+}
+
+async function deleteProduct(id) {
+    const res = await pool.query('DELETE FROM products WHERE id = $1 RETURNING *', [id]);
+    return res.rows[0];
+}
+
+// Functions for Orders
+async function createOrder(order) {
+    const { userId, products, total } = order;
+    const res = await pool.query(
+        'INSERT INTO orders (userId, products, total) VALUES ($1, $2, $3) RETURNING *',
+        [userId, products, total]
+    );
+    return res.rows[0];
+}
+
+async function fetchOrders() {
+    const res = await pool.query('SELECT * FROM orders');
+    return res.rows;
+}
+
+async function updateOrder(id, updatedOrder) {
+    const { userId, products, total } = updatedOrder;
+    const res = await pool.query(
+        'UPDATE orders SET userId = $1, products = $2, total = $3 WHERE id = $4 RETURNING *',
+        [userId, products, total, id]
+    );
+    return res.rows[0];
+}
+
+async function deleteOrder(id) {
+    const res = await pool.query('DELETE FROM orders WHERE id = $1 RETURNING *', [id]);
+    return res.rows[0];
+}
+
+module.exports = {
+    createProduct,
+    fetchProducts,
+    updateProduct,
+    deleteProduct,
+    createOrder,
+    fetchOrders,
+    updateOrder,
+    deleteOrder,
+};
