@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 5000;
 // Middleware for parsing JSON and URL-encoded data
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(cors({ origin: 'https://main.d308zysql7z2sz.amplifyapp.com' }));
 
 // Define your endpoints
 app.get('/', (req, res) => {
